@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat em tempo real</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    
+    <form id="chat">
+        <div class="div-title"><h2>Chat real time !</h2></div>
+
+        <input type="text" name="username" placeholder="Digite seu nome">
+        <input type="text" name="message" onfocus="this.value='';" placeholder="Digite sua mensagem">
+        <button class="btn" type="submit">Enviar</button>
+
+        <div class="messages"></div>
+
+    </form>
+
+    <!-- script q conecta c o socket do backend -->
+    <script type="text/javascript">
+        var socket = io('http://localhost:3000')
+
+        // função para renderizar a mensagem na tela
+        function renderMessage(message) {
+            $('.messages').append('<div class="message"><strong>' + message.author +'</strong>: '+ message.message +'</div>')
+        }
+
+        // ouve o previousMessage do backend para renderizar
+        socket.on('previousMessages', function(messages) {
+
+            // percorre cada uma das mensagens e renderiza
+            for (message of messages) {
+                renderMessage(message)
+            }
+        })
+
+        // ouve o receivedMessage do backend para renderizar
+        socket.on('receivedMessage', function(message) {
+            renderMessage(message)
+        })
+
+        // verifica quando o chat é submitado
+        $('#chat').submit(function(event) {
+            event.preventDefault()
+
+            // recebe os valores dos inputs, mensagem e nome
+            var author = $('input[name=username]').val()
+            var message = $('input[name=message]').val()
+
+            // verifica se tem o nome e a mensagem digitados
+            if (author.length && message.length) {
+                var messageObject = {
+                    author: author,
+                    message: message,
+                }
+
+                renderMessage(messageObject)
+
+                socket.emit('sendMessage', messageObject)
+            }
+        })
+    </script>
+</body>
+</html>
